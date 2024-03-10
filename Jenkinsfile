@@ -1,49 +1,37 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:14'
-        }
-    }
-    
+    agent any
+
     stages {
         stage('Clone repository') {
             steps {
-                git branch: 'main', url: 'https://github.com/Bharat234/PES2UG21CS234_Jenkins.git'
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], userRemoteConfigs: [[url: 'https://github.com/Bharat234/PES2UG21CS234_Jenkins.git']]])
             }
         }
-        
-        stage('Install dependencies') {
+
+        stage('Build') {
             steps {
-                sh 'npm install'
+                build 'PES2UG21CS234-1'
+                sh 'g++ main.cpp -o output'
             }
         }
-        
-        stage('Build application') {
+
+        stage('Test') {
             steps {
-                sh 'npm run build'
+                sh './output'
             }
         }
-        
-        stage('Test application') {
+
+        stage('Deploy') {
             steps {
-                sh 'npm test'
-            }
-        }
-        
-        stage('Push Docker image') {
-            steps {
-                sh "docker build -t <user>/<image>:$BUILD_NUMBER ."
-                sh "docker push <user>/<image>:$BUILD_NUMBER"
+                // Add deployment steps here
+                echo 'Deploying...'
             }
         }
     }
-    
+
     post {
-        always {
-            echo 'Pipeline failed'
-        }
-        success {
-            echo 'Pipeline succeeded'
+        failure {
+            error 'Pipeline failed'
         }
     }
 }
